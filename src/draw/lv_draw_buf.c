@@ -225,13 +225,6 @@ void lv_draw_buf_copy(lv_draw_buf_t * dest, const lv_area_t * dest_area,
     if(dest_area == NULL) line_width = dest->header.w;
     else line_width = lv_area_get_width(dest_area);
 
-    /* For indexed image, copy the palette if we are copying full image area*/
-    if(dest_area == NULL || src_area == NULL) {
-        if(LV_COLOR_FORMAT_IS_INDEXED(dest->header.cf)) {
-            lv_memcpy(dest->data, src->data, LV_COLOR_INDEXED_PALETTE_SIZE(dest->header.cf) * sizeof(lv_color32_t));
-        }
-    }
-
     /*Check source and dest area have same width*/
     if((src_area == NULL && line_width != src->header.w) || \
        (src_area != NULL && line_width != lv_area_get_width(src_area))) {
@@ -424,7 +417,6 @@ void * lv_draw_buf_goto_xy(const lv_draw_buf_t * buf, uint32_t x, uint32_t y)
     uint8_t * data = buf->data;
 
     /*Skip palette*/
-    data += LV_COLOR_INDEXED_PALETTE_SIZE(buf->header.cf) * sizeof(lv_color32_t);
     data += buf->header.stride * y;
 
     if(x == 0) return data;
@@ -474,12 +466,11 @@ lv_result_t lv_draw_buf_adjust_stride(lv_draw_buf_t * src, uint32_t stride)
         return LV_RESULT_INVALID;
     }
 
-    uint32_t offset = LV_COLOR_INDEXED_PALETTE_SIZE(header->cf) * 4;
 
     if(stride > header->stride) {
         /*Copy from the last line to the first*/
-        uint8_t * src_data = src->data + offset + header->stride * (h - 1);
-        uint8_t * dst_data = src->data + offset + stride * (h - 1);
+        uint8_t * src_data = src->data  + header->stride * (h - 1);
+        uint8_t * dst_data = src->data + stride * (h - 1);
         for(uint32_t y = 0; y < h; y++) {
             lv_memmove(dst_data, src_data, min_stride);
             src_data -= header->stride;
@@ -488,8 +479,8 @@ lv_result_t lv_draw_buf_adjust_stride(lv_draw_buf_t * src, uint32_t stride)
     }
     else {
         /*Copy from the first line to the last*/
-        uint8_t * src_data = src->data + offset;
-        uint8_t * dst_data = src->data + offset;
+        uint8_t * src_data = src->data;
+        uint8_t * dst_data = src->data;
         for(uint32_t y = 0; y < h; y++) {
             lv_memmove(dst_data, src_data, min_stride);
             src_data += header->stride;
@@ -501,100 +492,6 @@ lv_result_t lv_draw_buf_adjust_stride(lv_draw_buf_t * src, uint32_t stride)
 
     LV_PROFILER_DRAW_END;
     return LV_RESULT_OK;
-}
-
-lv_result_t lv_draw_buf_premultiply(lv_draw_buf_t * draw_buf)
-{
-    LV_ASSERT_NULL(draw_buf);
-    if(draw_buf == NULL) return LV_RESULT_INVALID;
-
-    if(draw_buf->header.flags & LV_IMAGE_FLAGS_PREMULTIPLIED) return LV_RESULT_INVALID;
-    if((draw_buf->header.flags & LV_IMAGE_FLAGS_MODIFIABLE) == 0) {
-        LV_LOG_WARN("draw buf is not modifiable: 0x%04x", draw_buf->header.flags);
-        return LV_RESULT_INVALID;
-    }
-    LV_PROFILER_DRAW_BEGIN;
-
-    /*Premultiply color with alpha, do case by case by judging color format*/
-    lv_color_format_t cf = draw_buf->header.cf;
-    if(LV_COLOR_FORMAT_IS_INDEXED(cf)) {
-        int size = LV_COLOR_INDEXED_PALETTE_SIZE(cf);
-        lv_color32_t * palette = (lv_color32_t *)draw_buf->data;
-        for(int i = 0; i < size; i++) {
-            lv_color_premultiply(&palette[i]);
-        }
-    }
-    else if(cf == LV_COLOR_FORMAT_ARGB8888) {
-        uint32_t h = draw_buf->header.h;
-        uint32_t w = draw_buf->header.w;
-        uint32_t stride = draw_buf->header.stride;
-        uint8_t * line = (uint8_t *)draw_buf->data;
-        for(uint32_t y = 0; y < h; y++) {
-            lv_color32_t * pixel = (lv_color32_t *)line;
-            for(uint32_t x = 0; x < w; x++) {
-                lv_color_premultiply(pixel);
-                pixel++;
-            }
-            line += stride;
-        }
-    }
-    else if(cf == LV_COLOR_FORMAT_RGB565A8) {
-        uint32_t h = draw_buf->header.h;
-        uint32_t w = draw_buf->header.w;
-        uint32_t stride = draw_buf->header.stride;
-        uint32_t alpha_stride = stride / 2;
-        uint8_t * line = (uint8_t *)draw_buf->data;
-        lv_opa_t * alpha = (lv_opa_t *)(line + stride * h);
-        for(uint32_t y = 0; y < h; y++) {
-            lv_color16_t * pixel = (lv_color16_t *)line;
-            for(uint32_t x = 0; x < w; x++) {
-                lv_color16_premultiply(pixel, alpha[x]);
-                pixel++;
-            }
-            line += stride;
-            alpha += alpha_stride;
-        }
-    }
-    else if(cf == LV_COLOR_FORMAT_ARGB8565) {
-        uint32_t h = draw_buf->header.h;
-        uint32_t w = draw_buf->header.w;
-        uint32_t stride = draw_buf->header.stride;
-        uint8_t * line = (uint8_t *)draw_buf->data;
-        for(uint32_t y = 0; y < h; y++) {
-            uint8_t * pixel = line;
-            for(uint32_t x = 0; x < w; x++) {
-                uint8_t alpha = pixel[2];
-                lv_color16_premultiply((lv_color16_t *)pixel, alpha);
-                pixel += 3;
-            }
-            line += stride;
-        }
-    }
-    else if(LV_COLOR_FORMAT_IS_ALPHA_ONLY(cf)) {
-        /*Pass*/
-    }
-    else {
-        LV_LOG_WARN("draw buf has no alpha, cf: %d", cf);
-    }
-
-    draw_buf->header.flags |= LV_IMAGE_FLAGS_PREMULTIPLIED;
-
-    LV_PROFILER_DRAW_END;
-    return LV_RESULT_OK;
-}
-
-void lv_draw_buf_set_palette(lv_draw_buf_t * draw_buf, uint8_t index, lv_color32_t color)
-{
-    LV_ASSERT_NULL(draw_buf);
-    if(draw_buf == NULL) return;
-
-    if(!LV_COLOR_FORMAT_IS_INDEXED(draw_buf->header.cf)) {
-        LV_LOG_WARN("Not indexed color format");
-        return;
-    }
-
-    lv_color32_t * palette = (lv_color32_t *)draw_buf->data;
-    palette[index] = color;
 }
 
 bool lv_draw_buf_has_flag(const lv_draw_buf_t * draw_buf, lv_image_flags_t flag)
@@ -629,11 +526,6 @@ void lv_draw_buf_to_image(const lv_draw_buf_t * buf, lv_image_dsc_t * img)
     lv_memcpy((void *)img, buf, sizeof(lv_image_dsc_t));
 }
 
-void lv_image_buf_set_palette(lv_image_dsc_t * dsc, uint8_t id, lv_color32_t c)
-{
-    LV_LOG_WARN("Deprecated API, use lv_draw_buf_set_palette instead.");
-    lv_draw_buf_set_palette((lv_draw_buf_t *)dsc, id, c);
-}
 
 void lv_image_buf_free(lv_image_dsc_t * dsc)
 {
@@ -707,13 +599,6 @@ static uint32_t _calculate_draw_buf_size(uint32_t w, uint32_t h, lv_color_format
     if(stride == 0) stride = lv_draw_buf_width_to_stride(w, cf);
 
     size = stride * h;
-    if(cf == LV_COLOR_FORMAT_RGB565A8) {
-        size += (stride / 2) * h; /*A8 mask*/
-    }
-    else if(LV_COLOR_FORMAT_IS_INDEXED(cf)) {
-        /*@todo we have to include palette right before image data*/
-        size += LV_COLOR_INDEXED_PALETTE_SIZE(cf) * 4;
-    }
 
     return size;
 }

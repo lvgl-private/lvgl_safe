@@ -114,36 +114,7 @@ void lv_canvas_set_px(lv_obj_t * obj, int32_t x, int32_t y, lv_color_t color, lv
     lv_color_format_t cf = draw_buf->header.cf;
     uint8_t * data = lv_draw_buf_goto_xy(draw_buf, x, y);
 
-    if(LV_COLOR_FORMAT_IS_INDEXED(cf)) {
-        uint8_t shift;
-        uint8_t c_int = color.blue;
-        switch(cf) {
-            case LV_COLOR_FORMAT_I1:
-                shift = 7 - (x & 0x7);
-                break;
-            case LV_COLOR_FORMAT_I2:
-                shift = 6 - 2 * (x & 0x3);
-                break;
-            case LV_COLOR_FORMAT_I4:
-                shift = 4 - 4 * (x & 0x1);
-                break;
-            case LV_COLOR_FORMAT_I8:
-                /*Indexed8 format is a easy case, process and return.*/
-                shift = 0;
-                *data = c_int;
-            default:
-                return;
-        }
-
-        uint8_t bpp = lv_color_format_get_bpp(cf);
-        uint8_t mask = (1 << bpp) - 1;
-        c_int &= mask;
-        *data = (*data & ~(mask << shift)) | (c_int << shift);
-    }
-    else if(cf == LV_COLOR_FORMAT_L8) {
-        *data = lv_color_luminance(color);
-    }
-    else if(cf == LV_COLOR_FORMAT_A8) {
+    if(cf == LV_COLOR_FORMAT_A8) {
         *data = opa;
     }
     else if(cf == LV_COLOR_FORMAT_RGB565) {
@@ -170,23 +141,10 @@ void lv_canvas_set_px(lv_obj_t * obj, int32_t x, int32_t y, lv_color_t color, lv
         buf->blue = color.blue;
         buf->alpha = opa;
     }
-    else if(cf == LV_COLOR_FORMAT_AL88) {
-        lv_color16a_t * buf = (lv_color16a_t *)data;
-        buf->lumi = lv_color_luminance(color);
-        buf->alpha = 255;
-    }
+
     lv_obj_invalidate(obj);
 }
 
-void lv_canvas_set_palette(lv_obj_t * obj, uint8_t index, lv_color32_t color)
-{
-    LV_ASSERT_OBJ(obj, MY_CLASS);
-
-    lv_canvas_t * canvas = (lv_canvas_t *)obj;
-
-    lv_draw_buf_set_palette(canvas->draw_buf, index, color);
-    lv_obj_invalidate(obj);
-}
 
 /*=====================
  * Getter functions
@@ -236,13 +194,6 @@ lv_color32_t lv_canvas_get_px(lv_obj_t * obj, int32_t x, int32_t y)
                 ret.green = alpha_color.green;
                 ret.blue = alpha_color.blue;
                 ret.alpha = px[0];
-                break;
-            }
-        case LV_COLOR_FORMAT_L8: {
-                ret.red = *px;
-                ret.green = *px;
-                ret.blue = *px;
-                ret.alpha = 0xFF;
                 break;
             }
         default:
@@ -333,26 +284,6 @@ void lv_canvas_fill_bg(lv_obj_t * obj, lv_color_t color, lv_opa_t opa)
                 buf8[x + 0] = color.blue;
                 buf8[x + 1] = color.green;
                 buf8[x + 2] = color.red;
-            }
-        }
-    }
-    else if(header->cf == LV_COLOR_FORMAT_L8) {
-        uint8_t c8 = lv_color_luminance(color);
-        for(y = 0; y < header->h; y++) {
-            uint8_t * buf = (uint8_t *)(data + y * stride);
-            for(x = 0; x < header->w; x++) {
-                buf[x] = c8;
-            }
-        }
-    }
-    else if(header->cf == LV_COLOR_FORMAT_AL88) {
-        lv_color16a_t c;
-        c.lumi = lv_color_luminance(color);
-        c.alpha = 255;
-        for(y = 0; y < header->h; y++) {
-            lv_color16a_t * buf = (lv_color16a_t *)(data + y * stride);
-            for(x = 0; x < header->w; x++) {
-                buf[x] = c;
             }
         }
     }

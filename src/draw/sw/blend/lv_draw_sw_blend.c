@@ -10,30 +10,9 @@
 #include "lv_draw_sw_blend_private.h"
 #include "../../lv_draw_private.h"
 #include "../lv_draw_sw.h"
-#if LV_DRAW_SW_SUPPORT_L8
-    #include "lv_draw_sw_blend_to_l8.h"
-#endif
-#if LV_DRAW_SW_SUPPORT_AL88
-    #include "lv_draw_sw_blend_to_al88.h"
-#endif
-#if LV_DRAW_SW_SUPPORT_RGB565
-    #include "lv_draw_sw_blend_to_rgb565.h"
-#endif
-#if LV_DRAW_SW_SUPPORT_RGB565_SWAPPED
-    #include "lv_draw_sw_blend_to_rgb565_swapped.h"
-#endif
-#if LV_DRAW_SW_SUPPORT_ARGB8888
-    #include "lv_draw_sw_blend_to_argb8888.h"
-#endif
-#if LV_DRAW_SW_SUPPORT_ARGB8888_PREMULTIPLIED
-    #include "lv_draw_sw_blend_to_argb8888_premultiplied.h"
-#endif
-#if LV_DRAW_SW_SUPPORT_RGB888 || LV_DRAW_SW_SUPPORT_XRGB8888
-    #include "lv_draw_sw_blend_to_rgb888.h"
-#endif
-#if LV_DRAW_SW_SUPPORT_I1
-    #include "lv_draw_sw_blend_to_i1.h"
-#endif
+#include "lv_draw_sw_blend_to_rgb565.h"
+#include "lv_draw_sw_blend_to_rgb888.h"
+
 #if LV_USE_DRAW_SW
 
 /*********************
@@ -175,52 +154,14 @@ static inline void LV_ATTRIBUTE_FAST_MEM lv_draw_sw_blend_color(lv_color_format_
                                                                 lv_draw_sw_blend_fill_dsc_t * fill_dsc)
 {
     switch(layer_cf) {
-#if LV_DRAW_SW_SUPPORT_RGB565
         case LV_COLOR_FORMAT_RGB565:
             lv_draw_sw_blend_color_to_rgb565(fill_dsc);
             break;
-#endif
-#if LV_DRAW_SW_SUPPORT_RGB565_SWAPPED
-        case LV_COLOR_FORMAT_RGB565_SWAPPED:
-            lv_draw_sw_blend_color_to_rgb565_swapped(fill_dsc);
-            break;
-#endif
-#if LV_DRAW_SW_SUPPORT_ARGB8888
-        case LV_COLOR_FORMAT_ARGB8888:
-            lv_draw_sw_blend_color_to_argb8888(fill_dsc);
-            break;
-#endif
-#if LV_DRAW_SW_SUPPORT_RGB888
         case LV_COLOR_FORMAT_RGB888:
             lv_draw_sw_blend_color_to_rgb888(fill_dsc, 3);
             break;
-#endif
-#if LV_DRAW_SW_SUPPORT_XRGB8888
         case LV_COLOR_FORMAT_XRGB8888:
             lv_draw_sw_blend_color_to_rgb888(fill_dsc, 4);
-            break;
-#endif
-#if LV_DRAW_SW_SUPPORT_ARGB8888_PREMULTIPLIED
-        case LV_COLOR_FORMAT_ARGB8888_PREMULTIPLIED:
-            lv_draw_sw_blend_color_to_argb8888_premultiplied(fill_dsc);
-            break;
-#endif
-#if LV_DRAW_SW_SUPPORT_L8
-        case LV_COLOR_FORMAT_L8:
-            lv_draw_sw_blend_color_to_l8(fill_dsc);
-            break;
-#endif
-#if LV_DRAW_SW_SUPPORT_AL88
-        case LV_COLOR_FORMAT_AL88:
-            lv_draw_sw_blend_color_to_al88(fill_dsc);
-            break;
-#endif
-#if LV_DRAW_SW_SUPPORT_I1
-        case LV_COLOR_FORMAT_I1:
-            lv_draw_sw_blend_color_to_i1(fill_dsc);
-            break;
-#endif
-        default:
             break;
     }
 }
@@ -229,52 +170,15 @@ static inline void LV_ATTRIBUTE_FAST_MEM lv_draw_sw_blend_image(lv_color_format_
                                                                 lv_draw_sw_blend_image_dsc_t * image_dsc)
 {
     switch(layer_cf) {
-#if LV_DRAW_SW_SUPPORT_RGB565
         case LV_COLOR_FORMAT_RGB565:
-        case LV_COLOR_FORMAT_RGB565A8:
             lv_draw_sw_blend_image_to_rgb565(image_dsc);
             break;
-#endif
-#if LV_DRAW_SW_SUPPORT_RGB565_SWAPPED
-        case LV_COLOR_FORMAT_RGB565_SWAPPED:
-            lv_draw_sw_blend_image_to_rgb565_swapped(image_dsc);
-            break;
-#endif
-#if LV_DRAW_SW_SUPPORT_ARGB8888
-        case LV_COLOR_FORMAT_ARGB8888:
-            lv_draw_sw_blend_image_to_argb8888(image_dsc);
-            break;
-#endif
-#if LV_DRAW_SW_SUPPORT_RGB888
         case LV_COLOR_FORMAT_RGB888:
             lv_draw_sw_blend_image_to_rgb888(image_dsc, 3);
             break;
-#endif
-#if LV_DRAW_SW_SUPPORT_XRGB8888
         case LV_COLOR_FORMAT_XRGB8888:
             lv_draw_sw_blend_image_to_rgb888(image_dsc, 4);
             break;
-#endif
-#if LV_DRAW_SW_SUPPORT_ARGB8888_PREMULTIPLIED
-        case LV_COLOR_FORMAT_ARGB8888_PREMULTIPLIED:
-            lv_draw_sw_blend_image_to_argb8888_premultiplied(image_dsc);
-            break;
-#endif
-#if LV_DRAW_SW_SUPPORT_L8
-        case LV_COLOR_FORMAT_L8:
-            lv_draw_sw_blend_image_to_l8(image_dsc);
-            break;
-#endif
-#if LV_DRAW_SW_SUPPORT_AL88
-        case LV_COLOR_FORMAT_AL88:
-            lv_draw_sw_blend_image_to_al88(image_dsc);
-            break;
-#endif
-#if LV_DRAW_SW_SUPPORT_I1
-        case LV_COLOR_FORMAT_I1:
-            lv_draw_sw_blend_image_to_i1(image_dsc);
-            break;
-#endif
         default:
             break;
     }

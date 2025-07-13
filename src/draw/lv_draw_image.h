@@ -139,16 +139,6 @@ lv_draw_image_dsc_t * lv_draw_task_get_image_dsc(lv_draw_task_t * task);
 void lv_draw_image(lv_layer_t * layer, const lv_draw_image_dsc_t * dsc, const lv_area_t * coords);
 
 /**
- * Create a draw task to blend a layer to another layer
- * @param layer         pointer to a layer
- * @param dsc           pointer to an initialized draw descriptor. `src` must be set to the layer to blend
- * @param coords        the coordinates of the layer.
- * @note                `coords` can be small than the total widget area from which the layer is created
- *                      (if only a part of the widget was rendered to a layer)
- */
-void lv_draw_layer(lv_layer_t * layer, const lv_draw_image_dsc_t * dsc, const lv_area_t * coords);
-
-/**
  * Get the type of an image source
  * @param src pointer to an image source:
  *  - pointer to an 'lv_image_t' variable (image stored internally and compiled into the code)

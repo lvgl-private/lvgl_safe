@@ -84,18 +84,6 @@ void lv_canvas_set_draw_buf(lv_obj_t * obj, lv_draw_buf_t * draw_buf);
  */
 void lv_canvas_set_px(lv_obj_t * obj, int32_t x, int32_t y, lv_color_t color, lv_opa_t opa);
 
-/**
- * Set the palette color of a canvas for index format. Valid only for `LV_COLOR_FORMAT_I1/2/4/8`
- * @param obj       pointer to canvas object
- * @param index     the palette color to set:
- *                  - for `LV_COLOR_FORMAT_I1`: 0..1
- *                  - for `LV_COLOR_FORMAT_I2`: 0..3
- *                  - for `LV_COLOR_FORMAT_I4`: 0..15
- *                  - for `LV_COLOR_FORMAT_I8`: 0..255
- * @param color     the color to set
- */
-void lv_canvas_set_palette(lv_obj_t * obj, uint8_t index, lv_color32_t color);
-
 /*=====================
  * Getter functions
  *====================*/

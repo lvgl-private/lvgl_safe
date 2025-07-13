@@ -39,10 +39,6 @@ extern "C" {
 #include "vector_graphic/lv_demo_vector_graphic.h"
 #endif
 
-#if LV_USE_DEMO_RENDER
-#include "render/lv_demo_render.h"
-#endif
-
 /*********************
  *      DEFINES
  *********************/

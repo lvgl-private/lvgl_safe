@@ -75,7 +75,13 @@ lv_display_t * lv_display_create(int32_t hor_res, int32_t ver_res)
     disp->offset_y         = 0;
     disp->antialiasing     = LV_COLOR_DEPTH > 8 ? 1 : 0;
     disp->dpi              = LV_DPI_DEF;
-    disp->color_format = LV_COLOR_FORMAT_NATIVE;
+#if LV_COLOR_DEPTH == 16
+    disp->color_format = LV_COLOR_FORMAT_RGB565;
+#elif LV_COLOR_DEPTH == 24
+    disp->color_format = LV_COLOR_FORMAT_RGB888;
+#else
+    disp->color_format = LV_COLOR_FORMAT_XRGB8888;
+#endif
 
 
 #if defined(LV_DRAW_SW_DRAW_UNIT_CNT) && (LV_DRAW_SW_DRAW_UNIT_CNT != 0)

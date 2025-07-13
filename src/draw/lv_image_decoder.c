@@ -246,7 +246,7 @@ lv_draw_buf_t * lv_image_decoder_post_process(lv_image_decoder_dsc_t * dsc, lv_d
     if(decoded == NULL) return NULL; /*No need to adjust*/
 
     lv_image_decoder_args_t * args = &dsc->args;
-    if(args->stride_align && decoded->header.cf != LV_COLOR_FORMAT_RGB565A8) {
+    if(args->stride_align) {
         uint32_t stride_expect = lv_draw_buf_width_to_stride(decoded->header.w, decoded->header.cf);
         if(decoded->header.stride != stride_expect) {
             LV_LOG_TRACE("Stride mismatch");
@@ -262,28 +262,6 @@ lv_draw_buf_t * lv_image_decoder_post_process(lv_image_decoder_dsc_t * dsc, lv_d
                 lv_draw_buf_copy(aligned, NULL, decoded, NULL);
                 decoded = aligned;
             }
-        }
-    }
-
-    /*Premultiply alpha channel*/
-    if(args->premultiply
-       && !LV_COLOR_FORMAT_IS_ALPHA_ONLY(decoded->header.cf)
-       && lv_color_format_has_alpha(decoded->header.cf)
-       && !lv_draw_buf_has_flag(decoded, LV_IMAGE_FLAGS_PREMULTIPLIED) /*Hasn't done yet*/
-      ) {
-        LV_LOG_TRACE("Alpha premultiply.");
-        if(lv_draw_buf_has_flag(decoded, LV_IMAGE_FLAGS_MODIFIABLE)) {
-            /*Do it directly*/
-            lv_draw_buf_premultiply(decoded);
-        }
-        else {
-            decoded = lv_draw_buf_dup_ex(image_cache_draw_buf_handlers, decoded);
-            if(decoded == NULL) {
-                LV_LOG_ERROR("No memory for premultiplying.");
-                return NULL;
-            }
-
-            lv_draw_buf_premultiply(decoded);
         }
     }
 
@@ -387,12 +365,7 @@ static lv_image_decoder_t * image_decoder_get_info(lv_image_decoder_dsc_t * dsc,
 
 static uint32_t img_width_to_stride(lv_image_header_t * header)
 {
-    if(header->cf == LV_COLOR_FORMAT_RGB565A8) {
-        return header->w * 2;
-    }
-    else {
-        return ((uint32_t)header->w * lv_color_format_get_bpp(header->cf) + 7) >> 3;
-    }
+    return ((uint32_t)header->w * lv_color_format_get_bpp(header->cf) + 7) >> 3;
 }
 
 static lv_result_t try_cache(lv_image_decoder_dsc_t * dsc)

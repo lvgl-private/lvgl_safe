@@ -810,26 +810,7 @@ static void scale_draw_label(lv_obj_t * obj, lv_event_t * event, lv_draw_label_d
         return;
     }
 
-    if(label_rotation > 0) {
-        /*Draw the label to a new layer and draw the layer rotated*/
-        lv_layer_t * layer_label = lv_draw_layer_create(layer, LV_COLOR_FORMAT_ARGB8888, &label_coords);
-        lv_draw_label(layer_label, label_dsc, &label_coords);
-
-        lv_point_t pivot_point;
-        /* Set pivot point to the center of the label so it matches the scale curve */
-        pivot_point.x = lv_area_get_width(&label_coords) / 2;
-        pivot_point.y = lv_area_get_height(&label_coords) / 2;
-
-        lv_draw_image_dsc_t layer_draw_dsc;
-        lv_draw_image_dsc_init(&layer_draw_dsc);
-        layer_draw_dsc.src = layer_label;
-        layer_draw_dsc.rotation = label_rotation;
-        layer_draw_dsc.pivot = pivot_point;
-        lv_draw_layer(layer, &layer_draw_dsc, &label_coords);
-    }
-    else {
-        lv_draw_label(layer, label_dsc, &label_coords);
-    }
+    lv_draw_label(layer, label_dsc, &label_coords);
 
     if(label_dsc->text_local) {
         /* clear the reference to the text buffer on the stack */

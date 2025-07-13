@@ -188,36 +188,6 @@ static int32_t evaluate(lv_draw_unit_t * draw_unit, lv_draw_task_t * task)
 {
     LV_UNUSED(draw_unit);
 
-    switch(task->type) {
-        case LV_DRAW_TASK_TYPE_IMAGE:
-        case LV_DRAW_TASK_TYPE_LAYER: {
-                lv_draw_image_dsc_t * draw_dsc = task->draw_dsc;
-
-                /* not support skew */
-                if(draw_dsc->skew_x != 0 || draw_dsc->skew_y != 0) {
-                    return 0;
-                }
-
-                bool masked = draw_dsc->bitmap_mask_src != NULL;
-
-                lv_color_format_t cf = draw_dsc->header.cf;
-                if(masked && (cf == LV_COLOR_FORMAT_A8 || cf == LV_COLOR_FORMAT_RGB565A8)) {
-                    return 0;
-                }
-
-                if(cf >= LV_COLOR_FORMAT_PROPRIETARY_START) {
-                    return 0;
-                }
-            }
-            break;
-#if LV_USE_3DTEXTURE
-        case LV_DRAW_TASK_TYPE_3D:
-            return 0;
-#endif
-        default:
-            break;
-    }
-
     if(task->preference_score >= 100) {
         task->preference_score = 100;
         task->preferred_draw_unit_id = DRAW_UNIT_ID_SW;
@@ -390,9 +360,6 @@ static void execute_drawing(lv_draw_task_t * t)
             break;
         case LV_DRAW_TASK_TYPE_TRIANGLE:
             lv_draw_sw_triangle(t, t->draw_dsc);
-            break;
-        case LV_DRAW_TASK_TYPE_LAYER:
-            lv_draw_sw_layer(t, t->draw_dsc, &t->area);
             break;
         case LV_DRAW_TASK_TYPE_MASK_RECTANGLE:
             lv_draw_sw_mask_rect(t, t->draw_dsc);

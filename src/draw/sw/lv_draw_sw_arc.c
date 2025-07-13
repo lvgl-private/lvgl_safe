@@ -145,10 +145,6 @@ void lv_draw_sw_arc(lv_draw_task_t * t, const lv_draw_arc_dsc_t * dsc, const lv_
             blend_dsc.src_buf = decoder_dsc.decoded->data;
             blend_dsc.src_stride = decoder_dsc.decoded->header.stride;
             blend_dsc.src_color_format = decoder_dsc.decoded->header.cf;
-            if(blend_dsc.src_color_format == LV_COLOR_FORMAT_RGB565A8) {
-                blend_dsc.src_color_format = LV_COLOR_FORMAT_RGB565;
-                img_mask = (uint8_t *)blend_dsc.src_buf + blend_dsc.src_stride * lv_area_get_height(blend_dsc.src_area);
-            }
         }
     }
 

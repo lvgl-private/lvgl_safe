@@ -27,7 +27,6 @@ extern "C" {
 #include "../lv_draw_image.h"
 #include "../lv_draw_line.h"
 #include "../lv_draw_arc.h"
-#include "lv_draw_sw_utils.h"
 #include "blend/lv_draw_sw_blend.h"
 
 /*********************

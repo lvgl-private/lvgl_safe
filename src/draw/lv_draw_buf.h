@@ -298,14 +298,6 @@ void * lv_draw_buf_goto_xy(const lv_draw_buf_t * buf, uint32_t x, uint32_t y);
  */
 lv_result_t lv_draw_buf_adjust_stride(lv_draw_buf_t * src, uint32_t stride);
 
-/**
- * Premultiply draw buffer color with alpha channel.
- * If it's already premultiplied, return directly.
- * Only color formats with alpha channel will be processed.
- *
- * @return LV_RESULT_OK: premultiply success
- */
-lv_result_t lv_draw_buf_premultiply(lv_draw_buf_t * draw_buf);
 
 bool lv_draw_buf_has_flag(const lv_draw_buf_t * draw_buf, lv_image_flags_t flag);
 
@@ -321,23 +313,6 @@ void lv_draw_buf_clear_flag(lv_draw_buf_t * draw_buf, lv_image_flags_t flag);
 lv_result_t lv_draw_buf_from_image(lv_draw_buf_t * buf, const lv_image_dsc_t * img);
 
 void lv_draw_buf_to_image(const lv_draw_buf_t * buf, lv_image_dsc_t * img);
-
-/**
- * Set the palette color of an indexed image. Valid only for `LV_COLOR_FORMAT_I1/2/4/8`
- * @param draw_buf pointer to an image descriptor
- * @param index the palette color to set:
- *   - for `LV_COLOR_FORMAT_I1`: 0..1
- *   - for `LV_COLOR_FORMAT_I2`: 0..3
- *   - for `LV_COLOR_FORMAT_I4`: 0..15
- *   - for `LV_COLOR_FORMAT_I8`: 0..255
- * @param color the color to set in lv_color32_t format
- */
-void lv_draw_buf_set_palette(lv_draw_buf_t * draw_buf, uint8_t index, lv_color32_t color);
-
-/**
- * @deprecated Use lv_draw_buf_set_palette instead.
- */
-void lv_image_buf_set_palette(lv_image_dsc_t * dsc, uint8_t id, lv_color32_t c);
 
 /**
  * @deprecated Use lv_draw_buffer_create/destroy instead.

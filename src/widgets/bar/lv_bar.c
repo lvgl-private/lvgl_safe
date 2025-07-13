@@ -496,30 +496,6 @@ static void draw_indic(lv_event_t * e)
     short_side = LV_MIN(lv_area_get_width(&bar->indic_area), lv_area_get_height(&bar->indic_area));
     if(indic_radius > short_side >> 1) indic_radius = short_side >> 1;
 
-    /*Cases:
-     * Simple:
-     *   - indicator area is the same or smaller then the bg
-     *   - indicator has the same or larger radius than the bg
-     *   - what to do? just draw the indicator
-     * Radius issue:
-     *   - indicator area is the same or smaller then bg
-     *   - indicator has smaller radius than the bg and the indicator overflows on the corners
-     *   - what to do? draw the indicator on a layer and clip to bg radius
-     * Larger indicator:
-     *   - indicator area is the larger then the bg
-     *   - radius doesn't matter
-     *   - shadow doesn't matter
-     *   - what to do? just draw the indicator
-     * Shadow:
-     *   - indicator area is the same or smaller then the bg
-     *   - indicator has the same or larger radius than the bg (shadow needs to be drawn on strange clipped shape)
-     *   - what to do? don't draw the shadow if the indicator is too small has strange shape
-     * Gradient:
-     *   - the indicator has a gradient
-     *   - what to do? draw it on a bg sized layer clip the indicator are from the gradient
-     *
-     */
-
     bool mask_needed = false;
     if(hor && draw_rect_dsc.bg_grad.dir == LV_GRAD_DIR_HOR) mask_needed = true;
     else if(!hor && draw_rect_dsc.bg_grad.dir == LV_GRAD_DIR_VER) mask_needed = true;
@@ -532,74 +508,7 @@ static void draw_indic(lv_event_t * e)
     else if(indic_radius >= bg_radius) radius_issue = false;
     else if(lv_area_is_in(&indic_area, &bar_coords, bg_radius)) radius_issue = false;
 
-    if(radius_issue || mask_needed) {
-        if(!radius_issue) {
-            /*Draw only the shadow*/
-            lv_draw_rect_dsc_t draw_tmp_dsc = draw_rect_dsc;
-            draw_tmp_dsc.border_opa = 0;
-            draw_tmp_dsc.outline_opa = 0;
-            draw_tmp_dsc.bg_opa = 0;
-            draw_tmp_dsc.bg_image_opa = 0;
-            lv_draw_rect(layer, &draw_tmp_dsc, &indic_area);
-        }
-        else {
-            draw_rect_dsc.border_opa = 0;
-            draw_rect_dsc.outline_opa = 0;
-        }
-        draw_rect_dsc.shadow_opa = 0;
-
-        /*If clipped for any reason cannot the border, outline, and shadow
-         *as they would be clipped and looked ugly*/
-        lv_draw_rect_dsc_t draw_tmp_dsc = draw_rect_dsc;
-        draw_tmp_dsc.border_opa = 0;
-        draw_tmp_dsc.outline_opa = 0;
-        draw_tmp_dsc.shadow_opa = 0;
-        lv_area_t indic_draw_area = indic_area;
-        if(mask_needed) {
-            if(hor) {
-                indic_draw_area.x1 = bar_coords.x1 + bg_left;
-                indic_draw_area.x2 = bar_coords.x2 - bg_right;
-            }
-            else {
-                indic_draw_area.y1 = bar_coords.y1 + bg_top;
-                indic_draw_area.y2 = bar_coords.y2 - bg_bottom;
-            }
-            draw_tmp_dsc.radius = 0;
-        }
-
-        lv_layer_t * layer_indic = lv_draw_layer_create(layer, LV_COLOR_FORMAT_ARGB8888, &indic_draw_area);
-
-        lv_draw_rect(layer_indic, &draw_tmp_dsc, &indic_draw_area);
-
-        lv_draw_mask_rect_dsc_t mask_dsc;
-        lv_draw_mask_rect_dsc_init(&mask_dsc);
-        if(radius_issue) {
-            mask_dsc.area = bar_coords;
-            mask_dsc.radius = bg_radius;
-            lv_draw_mask_rect(layer_indic, &mask_dsc);
-        }
-
-        if(mask_needed) {
-            mask_dsc.area = indic_area;
-            mask_dsc.radius = indic_radius;
-            lv_draw_mask_rect(layer_indic, &mask_dsc);
-        }
-
-        lv_draw_image_dsc_t layer_draw_dsc;
-        lv_draw_image_dsc_init(&layer_draw_dsc);
-        layer_draw_dsc.src = layer_indic;
-        lv_draw_layer(layer, &layer_draw_dsc, &indic_draw_area);
-
-        /*Add the border, outline, and shadow only to the indicator area.
-         *They might have disabled if there is a radius_issue*/
-        draw_tmp_dsc = draw_rect_dsc;
-        draw_tmp_dsc.bg_opa = 0;
-        draw_tmp_dsc.bg_image_opa = 0;
-        lv_draw_rect(layer, &draw_tmp_dsc, &indic_area);
-    }
-    else {
-        lv_draw_rect(layer, &draw_rect_dsc, &indic_area);
-    }
+    lv_draw_rect(layer, &draw_rect_dsc, &indic_area);
 }
 
 static void lv_bar_event(const lv_obj_class_t * class_p, lv_event_t * e)

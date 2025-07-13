@@ -64,37 +64,6 @@ lv_draw_image_dsc_t * lv_draw_task_get_image_dsc(lv_draw_task_t * task)
     return task->type == LV_DRAW_TASK_TYPE_IMAGE ? (lv_draw_image_dsc_t *)task->draw_dsc : NULL;
 }
 
-void lv_draw_layer(lv_layer_t * layer, const lv_draw_image_dsc_t * dsc, const lv_area_t * coords)
-{
-    if(dsc->scale_x <= 0 || dsc->scale_y <= 0) {
-        /* NOT draw if scale is negative or zero */
-        return;
-    }
-
-    LV_PROFILER_DRAW_BEGIN;
-
-    lv_draw_task_t * t = lv_draw_add_task(layer, coords, LV_DRAW_TASK_TYPE_LAYER);
-    lv_draw_image_dsc_t * new_image_dsc = t->draw_dsc;
-    lv_memcpy(new_image_dsc, dsc, sizeof(*dsc));
-    t->state = LV_DRAW_TASK_STATE_WAITING;
-
-    lv_image_buf_get_transformed_area(&t->_real_area, lv_area_get_width(coords), lv_area_get_height(coords),
-                                      dsc->rotation, dsc->scale_x, dsc->scale_y, &dsc->pivot);
-    lv_area_move(&t->_real_area, coords->x1, coords->y1);
-
-    /*If the image_area is not set assume that it's the same as the rendering area */
-    if(new_image_dsc->image_area.x2 == LV_COORD_MIN) {
-        new_image_dsc->image_area = *coords;
-    }
-
-    lv_layer_t * layer_to_draw = (lv_layer_t *)dsc->src;
-    layer_to_draw->all_tasks_added = true;
-
-    lv_draw_finalize_task_creation(layer, t);
-
-    LV_PROFILER_DRAW_END;
-}
-
 void lv_draw_image(lv_layer_t * layer, const lv_draw_image_dsc_t * dsc, const lv_area_t * image_coords)
 {
     if(dsc->src == NULL) {

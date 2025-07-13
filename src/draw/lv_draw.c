@@ -256,24 +256,8 @@ bool lv_draw_dispatch_layer(lv_display_t * disp, lv_layer_t * layer)
 
     bool task_dispatched = false;
 
-    /*This layer is ready, enable blending its buffer*/
-    if(layer->parent && layer->all_tasks_added && layer->draw_task_head == NULL) {
-        /*Find a draw task with TYPE_LAYER in the layer where the src is this layer*/
-        lv_draw_task_t * t_src = layer->parent->draw_task_head;
-        while(t_src) {
-            if(t_src->type == LV_DRAW_TASK_TYPE_LAYER && t_src->state == LV_DRAW_TASK_STATE_WAITING) {
-                lv_draw_image_dsc_t * draw_dsc = t_src->draw_dsc;
-                if(draw_dsc->src == layer) {
-                    t_src->state = LV_DRAW_TASK_STATE_QUEUED;
-                    lv_draw_dispatch_request();
-                    break;
-                }
-            }
-            t_src = t_src->next;
-        }
-    }
     /*Assign draw tasks to the draw_units*/
-    else if(remove_task || layer->draw_task_head) {
+    if(remove_task || layer->draw_task_head) {
         /*Find a draw unit which is not busy and can take at least one task*/
         /*Let all draw units to pick draw tasks*/
         lv_draw_unit_t * u = _draw_info.unit_head;
@@ -565,8 +549,6 @@ static inline size_t get_draw_dsc_size(lv_draw_task_type_t type)
             return sizeof(lv_draw_label_dsc_t);
         case LV_DRAW_TASK_TYPE_IMAGE:
             return sizeof(lv_draw_image_dsc_t);
-        case LV_DRAW_TASK_TYPE_LAYER:
-            return sizeof(lv_draw_image_dsc_t);
         case LV_DRAW_TASK_TYPE_LINE:
             return sizeof(lv_draw_line_dsc_t);
         case LV_DRAW_TASK_TYPE_ARC:
@@ -604,45 +586,6 @@ static void cleanup_task(lv_draw_task_t * t, lv_display_t * disp)
 {
     LV_PROFILER_DRAW_BEGIN;
     /*If it was layer drawing free the layer too*/
-    if(t->type == LV_DRAW_TASK_TYPE_LAYER) {
-        lv_draw_image_dsc_t * draw_image_dsc = t->draw_dsc;
-        lv_layer_t * layer_drawn = (lv_layer_t *)draw_image_dsc->src;
-
-        if(layer_drawn->draw_buf) {
-            int32_t h = lv_area_get_height(&layer_drawn->buf_area);
-            uint32_t layer_size_byte = h * layer_drawn->draw_buf->header.stride;
-
-            if(_draw_info.used_memory_for_layers >= layer_size_byte) {
-                _draw_info.used_memory_for_layers -= layer_size_byte;
-            }
-            else {
-                _draw_info.used_memory_for_layers = 0;
-                LV_LOG_WARN("More layers were freed than allocated");
-            }
-            LV_LOG_INFO("Layer memory used: %" LV_PRIu32 " kB", get_layer_size_kb(_draw_info.used_memory_for_layers));
-            lv_draw_buf_destroy(layer_drawn->draw_buf);
-            layer_drawn->draw_buf = NULL;
-        }
-
-        /*Remove the layer from  the display's*/
-        if(disp) {
-            lv_layer_t * l2 = disp->layer_head;
-            while(l2) {
-                if(l2->next == layer_drawn) {
-                    l2->next = layer_drawn->next;
-                    break;
-                }
-                l2 = l2->next;
-            }
-
-            if(disp->layer_deinit) {
-                LV_PROFILER_DRAW_BEGIN_TAG("layer_deinit");
-                disp->layer_deinit(disp, layer_drawn);
-                LV_PROFILER_DRAW_END_TAG("layer_deinit");
-            }
-            lv_free(layer_drawn);
-        }
-    }
     lv_draw_label_dsc_t * draw_label_dsc = lv_draw_task_get_label_dsc(t);
     if(draw_label_dsc && draw_label_dsc->text_local) {
         lv_free((void *)draw_label_dsc->text);
