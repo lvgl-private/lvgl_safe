@@ -40,12 +40,6 @@ typedef enum _lvimage_flags_t {
      * For indexed image, this bit indicated palette data is pre-multiplied with alpha.
      */
     LV_IMAGE_FLAGS_PREMULTIPLIED    = 0x0001,
-    /**
-     * The image data is compressed, so decoder needs to decode image firstly.
-     * If this flag is set, the whole image will be decompressed upon decode, and
-     * `get_area_cb` won't be necessary.
-     */
-    LV_IMAGE_FLAGS_COMPRESSED       = 0x0008,
 
     /*Below flags are applicable only for draw buffer header.*/
 

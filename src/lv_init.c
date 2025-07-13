@@ -21,16 +21,7 @@
 #include "indev/lv_indev_private.h"
 #include "layouts/lv_layout_private.h"
 #include "libs/bin_decoder/lv_bin_decoder.h"
-#include "libs/bmp/lv_bmp.h"
-#include "libs/ffmpeg/lv_ffmpeg.h"
-#include "libs/freetype/lv_freetype.h"
 #include "libs/fsdrv/lv_fsdrv.h"
-#include "libs/gif/lv_gif.h"
-#include "libs/tjpgd/lv_tjpgd.h"
-#include "libs/libjpeg_turbo/lv_libjpeg_turbo.h"
-#include "libs/lodepng/lv_lodepng.h"
-#include "libs/libpng/lv_libpng.h"
-#include "libs/tiny_ttf/lv_tiny_ttf.h"
 #include "draw/lv_draw.h"
 #include "misc/lv_async.h"
 #include "misc/lv_fs_private.h"
@@ -365,34 +356,6 @@ void lv_init(void)
     lv_fs_uefi_init();
 #endif
 
-    /*Use the earlier initialized position of FFmpeg decoder as a fallback decoder*/
-#if LV_USE_FFMPEG
-    lv_ffmpeg_init();
-#endif
-
-#if LV_USE_LODEPNG
-    lv_lodepng_init();
-#endif
-
-#if LV_USE_LIBPNG
-    lv_libpng_init();
-#endif
-
-#if LV_USE_TJPGD
-    lv_tjpgd_init();
-#endif
-
-#if LV_USE_LIBJPEG_TURBO
-    lv_libjpeg_turbo_init();
-#endif
-
-#if LV_USE_BMP
-    lv_bmp_init();
-#endif
-
-#if LV_USE_SVG
-    lv_svg_decoder_init();
-#endif
 
 #if LV_USE_TRANSLATION
     lv_translation_init();

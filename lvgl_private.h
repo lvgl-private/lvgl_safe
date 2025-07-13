@@ -29,9 +29,6 @@ extern "C" {
 #include "src/others/fragment/lv_fragment_private.h"
 #include "src/others/observer/lv_observer_private.h"
 #include "src/others/xml/lv_xml_private.h"
-#include "src/libs/qrcode/lv_qrcode_private.h"
-#include "src/libs/barcode/lv_barcode_private.h"
-#include "src/libs/gif/lv_gif_private.h"
 #include "src/draw/lv_draw_triangle_private.h"
 #include "src/draw/lv_draw_private.h"
 #include "src/draw/lv_draw_rect_private.h"
@@ -99,9 +96,6 @@ extern "C" {
 #include "src/widgets/3dtexture/lv_3dtexture_private.h"
 #include "src/tick/lv_tick_private.h"
 #include "src/stdlib/builtin/lv_tlsf_private.h"
-#include "src/libs/rlottie/lv_rlottie_private.h"
-#include "src/libs/ffmpeg/lv_ffmpeg_private.h"
-#include "src/widgets/lottie/lv_lottie_private.h"
 #include "src/osal/lv_os_private.h"
 
 /*********************

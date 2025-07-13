@@ -12,16 +12,7 @@
 #include "../../draw/lv_draw_buf.h"
 #include "../../stdlib/lv_string.h"
 #include "../../stdlib/lv_sprintf.h"
-#include "../../libs/rle/lv_rle.h"
 #include "../../core/lv_global.h"
-
-#if LV_USE_LZ4_EXTERNAL
-    #include <lz4.h>
-#endif
-
-#if LV_USE_LZ4_INTERNAL
-    #include "../../libs/lz4/lz4.h"
-#endif
 
 /*********************
  *      DEFINES
@@ -220,10 +211,7 @@ lv_result_t lv_bin_decoder_open(lv_image_decoder_t * decoder, lv_image_decoder_d
 
         lv_color_format_t cf = dsc->header.cf;
 
-        if(dsc->header.flags & LV_IMAGE_FLAGS_COMPRESSED) {
-            res = decode_compressed(decoder, dsc);
-        }
-        else if(LV_COLOR_FORMAT_IS_INDEXED(cf)) {
+        if(LV_COLOR_FORMAT_IS_INDEXED(cf)) {
             if(dsc->args.use_indexed) {
                 /*Palette for indexed image and whole image of A8 image are always loaded to RAM for simplicity*/
                 res = load_indexed(decoder, dsc);
@@ -261,10 +249,7 @@ lv_result_t lv_bin_decoder_open(lv_image_decoder_t * decoder, lv_image_decoder_d
         }
 
         lv_color_format_t cf = image->header.cf;
-        if(dsc->header.flags & LV_IMAGE_FLAGS_COMPRESSED) {
-            res = decode_compressed(decoder, dsc);
-        }
-        else if(LV_COLOR_FORMAT_IS_INDEXED(cf)) {
+        if(LV_COLOR_FORMAT_IS_INDEXED(cf)) {
             /*Need decoder data to store converted image*/
             decoder_data_t * decoder_data = get_decoder_data(dsc);
             if(decoder_data == NULL) {
@@ -589,13 +574,7 @@ static lv_result_t decode_indexed(lv_image_decoder_t * decoder, lv_image_decoder
     lv_draw_buf_t * draw_buf_indexed = NULL;
     uint32_t stride = dsc->header.stride;
 
-    bool is_compressed = dsc->header.flags & LV_IMAGE_FLAGS_COMPRESSED;
-    if(is_compressed) {
-        uint8_t * data = decoder_data->decompressed->data;
-        palette = (lv_color32_t *)data;
-        indexed_data = data + palette_len;
-    }
-    else if(dsc->src_type == LV_IMAGE_SRC_FILE) {
+    if(dsc->src_type == LV_IMAGE_SRC_FILE) {
         /*read palette for indexed image*/
         palette = lv_malloc(palette_len);
         LV_ASSERT_MALLOC(palette);
@@ -674,14 +653,14 @@ static lv_result_t decode_indexed(lv_image_decoder_t * decoder, lv_image_decoder
 
     dsc->decoded = decoded;
     decoder_data->decoded = decoded; /*Free when decoder closes*/
-    if(dsc->src_type == LV_IMAGE_SRC_FILE && !is_compressed) {
+    if(dsc->src_type == LV_IMAGE_SRC_FILE) {
         decoder_data->palette = (void *)palette; /*Free decoder data on close*/
         lv_draw_buf_destroy(draw_buf_indexed);
     }
 
     return LV_RESULT_OK;
 exit_with_buf:
-    if(dsc->src_type == LV_IMAGE_SRC_FILE && !is_compressed) {
+    if(dsc->src_type == LV_IMAGE_SRC_FILE) {
         lv_free((void *)palette);
         decoder_data->palette = NULL;
     }
@@ -711,16 +690,6 @@ static lv_result_t load_indexed(lv_image_decoder_t * decoder, lv_image_decoder_d
     lv_fs_res_t res;
     uint32_t rn;
     decoder_data_t * decoder_data = dsc->user_data;
-
-    if(dsc->header.flags & LV_IMAGE_FLAGS_COMPRESSED) {
-        /*The decompressed image is already loaded to RAM*/
-        dsc->decoded = decoder_data->decompressed;
-
-        /*Transfer ownership to decoded pointer because it's the final data we use.*/
-        decoder_data->decoded = decoder_data->decompressed;
-        decoder_data->decompressed = NULL;
-        return LV_RESULT_OK;
-    }
 
     if(dsc->src_type == LV_IMAGE_SRC_VARIABLE) {
         lv_image_dsc_t * image = (lv_image_dsc_t *)dsc->src;
@@ -875,11 +844,7 @@ static lv_result_t decode_alpha_only(lv_image_decoder_t * decoder, lv_image_deco
 
     uint8_t * img_data = decoded->data;
 
-    if(dsc->header.flags & LV_IMAGE_FLAGS_COMPRESSED) {
-        /*Copy from image data*/
-        lv_memcpy(img_data, decoder_data->decompressed->data, file_len);
-    }
-    else if(dsc->src_type == LV_IMAGE_SRC_FILE) {
+    if(dsc->src_type == LV_IMAGE_SRC_FILE) {
         res = fs_read_file_at(decoder_data->f, sizeof(lv_image_header_t), img_data, file_len, &rn);
         if(res != LV_FS_RES_OK || rn != file_len) {
             LV_LOG_WARN("Read header failed: %d, with len: %" LV_PRIu32 ", expected: %" LV_PRIu32, res, rn, file_len);
@@ -922,125 +887,6 @@ static lv_result_t decode_alpha_only(lv_image_decoder_t * decoder, lv_image_deco
     decoder_data->decoded = decoded;
     dsc->decoded = decoded;
     return LV_RESULT_OK;
-}
-
-static lv_result_t decode_compressed(lv_image_decoder_t * decoder, lv_image_decoder_dsc_t * dsc)
-{
-#if LV_BIN_DECODER_RAM_LOAD
-    uint32_t rn;
-    uint32_t len;
-    uint32_t compressed_len;
-    decoder_data_t * decoder_data = get_decoder_data(dsc);
-    lv_result_t res;
-    lv_fs_res_t fs_res;
-    uint8_t * file_buf = NULL;
-    lv_image_compressed_t * compressed = &decoder_data->compressed;
-
-    lv_memzero(compressed, sizeof(lv_image_compressed_t));
-
-    if(dsc->src_type == LV_IMAGE_SRC_FILE) {
-        lv_fs_file_t * f = decoder_data->f;
-
-        if(lv_fs_seek(f, 0, LV_FS_SEEK_END) != LV_FS_RES_OK ||
-           lv_fs_tell(f, &compressed_len) != LV_FS_RES_OK) {
-            LV_LOG_WARN("Failed to get compressed file len");
-            return LV_RESULT_INVALID;
-        }
-
-        compressed_len -= sizeof(lv_image_header_t);
-        compressed_len -= 12;
-
-        /*Read compress header*/
-        len = 12;
-        fs_res = fs_read_file_at(f, sizeof(lv_image_header_t), compressed, len, &rn);
-        if(fs_res != LV_FS_RES_OK || rn != len) {
-            LV_LOG_WARN("Read compressed header failed: %d, with len: %" LV_PRIu32 ", expected: %" LV_PRIu32, fs_res, rn, len);
-            return LV_RESULT_INVALID;
-        }
-
-        if(compressed->compressed_size != compressed_len) {
-            LV_LOG_WARN("Compressed size mismatch: %" LV_PRIu32" != %" LV_PRIu32, compressed->compressed_size, compressed_len);
-            return LV_RESULT_INVALID;
-        }
-
-        file_buf = lv_malloc(compressed_len);
-        if(file_buf == NULL) {
-            LV_LOG_WARN("No memory for compressed file");
-            return LV_RESULT_INVALID;
-
-        }
-
-        /*Continue to read the compressed data following compression header*/
-        fs_res = lv_fs_read(f, file_buf, compressed_len, &rn);
-        if(fs_res != LV_FS_RES_OK || rn != compressed_len) {
-            LV_LOG_WARN("Read compressed file failed: %d, with len: %" LV_PRIu32 ", expected: %" LV_PRIu32, fs_res, rn,
-                        compressed_len);
-            lv_free(file_buf);
-            return LV_RESULT_INVALID;
-        }
-
-        /*Decompress the image*/
-        compressed->data = file_buf;
-    }
-    else if(dsc->src_type == LV_IMAGE_SRC_VARIABLE) {
-        lv_image_dsc_t * image = (lv_image_dsc_t *)dsc->src;
-        compressed_len = image->data_size;
-
-        /*Read compress header*/
-        len = 12;
-        compressed_len -= len;
-        lv_memcpy(compressed, image->data, len);
-        compressed->data = image->data + len;
-        if(compressed->compressed_size != compressed_len) {
-            LV_LOG_WARN("Compressed size mismatch: %" LV_PRIu32" != %" LV_PRIu32, compressed->compressed_size, compressed_len);
-            return LV_RESULT_INVALID;
-        }
-    }
-    else {
-        LV_LOG_WARN("Compressed image only support file or variable");
-        return LV_RESULT_INVALID;
-    }
-
-    res = decompress_image(dsc, compressed);
-    compressed->data = NULL; /*No need to store the data any more*/
-    lv_free(file_buf);
-    if(res != LV_RESULT_OK) {
-        LV_LOG_WARN("Decompress failed");
-        return LV_RESULT_INVALID;
-    }
-
-    /*Depends on the cf, need to further decode image like an C-array image*/
-    lv_image_dsc_t * image = (lv_image_dsc_t *)dsc->src;
-    if(dsc->src_type == LV_IMAGE_SRC_VARIABLE && image->data == NULL) {
-        return LV_RESULT_INVALID;
-    }
-
-    lv_color_format_t cf = dsc->header.cf;
-    if(LV_COLOR_FORMAT_IS_INDEXED(cf)) {
-        if(dsc->args.use_indexed) res = load_indexed(decoder, dsc);
-        else res = decode_indexed(decoder, dsc);
-    }
-    else if(LV_COLOR_FORMAT_IS_ALPHA_ONLY(cf)) {
-        res = decode_alpha_only(decoder, dsc);
-    }
-    else {
-        /*The decompressed data is the original image data.*/
-        dsc->decoded = decoder_data->decompressed;
-
-        /*Transfer ownership of decompressed to `decoded` since it can be used directly*/
-        decoder_data->decoded = decoder_data->decompressed;
-        decoder_data->decompressed = NULL;
-        res = LV_RESULT_OK;
-    }
-
-    return res;
-#else
-    LV_UNUSED(decompress_image);
-    LV_UNUSED(decoder);
-    LV_UNUSED(dsc);
-    LV_LOG_ERROR("Need LV_BIN_DECODER_RAM_LOAD to be enabled");
-    return LV_RESULT_INVALID;
-#endif
 }
 
 static lv_result_t decode_indexed_line(lv_color_format_t color_format, const lv_color32_t * palette, int32_t x,
@@ -1107,97 +953,4 @@ static lv_fs_res_t fs_read_file_at(lv_fs_file_t * f, uint32_t pos, void * buff, 
     }
 
     return LV_FS_RES_OK;
-}
-
-static lv_result_t decompress_image(lv_image_decoder_dsc_t * dsc, const lv_image_compressed_t * compressed)
-{
-    /* At least one compression method must be enabled */
-#if (LV_USE_LZ4 || LV_USE_RLE)
-    /* Check if the decompression method is enabled and valid */
-    if(compressed->method == LV_IMAGE_COMPRESS_RLE) {
-#if !LV_USE_RLE
-        LV_LOG_WARN("RLE decompression is not enabled");
-        return LV_RESULT_INVALID;
-#endif
-    }
-    else if(compressed->method == LV_IMAGE_COMPRESS_LZ4) {
-#if !LV_USE_LZ4
-        LV_LOG_WARN("LZ4 decompression is not enabled");
-        return LV_RESULT_INVALID;
-#endif
-    }
-    else {
-        LV_LOG_WARN("Unknown compression method: %" LV_PRIu32, compressed->method);
-        return LV_RESULT_INVALID;
-    }
-
-    /*Need to store decompressed data to decoder to free on close*/
-    decoder_data_t * decoder_data = get_decoder_data(dsc);
-    if(decoder_data == NULL) {
-        return LV_RESULT_INVALID;
-    }
-
-    uint8_t * img_data;
-    uint32_t out_len = compressed->decompressed_size;
-    uint32_t input_len = compressed->compressed_size;
-    uint32_t len = 0;
-
-    lv_draw_buf_t * decompressed = lv_draw_buf_create_ex(image_cache_draw_buf_handlers, dsc->header.w, dsc->header.h,
-                                                         dsc->header.cf,
-                                                         dsc->header.stride);
-    if(decompressed == NULL) {
-        LV_LOG_WARN("No memory for decompressed image, input: %" LV_PRIu32 ", output: %" LV_PRIu32, input_len, out_len);
-        return LV_RESULT_INVALID;
-    }
-
-    if(out_len > decompressed->data_size) {
-        LV_LOG_ERROR("Decompressed size mismatch: %" LV_PRIu32 " > %" LV_PRIu32, out_len, decompressed->data_size);
-        lv_draw_buf_destroy(decompressed);
-        return LV_RESULT_INVALID;
-    }
-
-    img_data = decompressed->data;
-
-    if(compressed->method == LV_IMAGE_COMPRESS_RLE) {
-#if LV_USE_RLE
-        /*Compress always happen on byte*/
-        uint32_t pixel_byte;
-        if(dsc->header.cf == LV_COLOR_FORMAT_RGB565A8)
-            pixel_byte = 2;
-        else
-            pixel_byte = (lv_color_format_get_bpp(dsc->header.cf) + 7) >> 3;
-
-        const uint8_t * input = compressed->data;
-        uint8_t * output = img_data;
-
-        len = lv_rle_decompress(input, input_len, output, out_len, pixel_byte);
-#endif /* LV_USE_RLE */
-    }
-    else if(compressed->method == LV_IMAGE_COMPRESS_LZ4) {
-#if LV_USE_LZ4
-        const char * input = (const char *)compressed->data;
-        char * output = (char *)img_data;
-
-        int ret = LZ4_decompress_safe(input, output, (int)input_len, (int)out_len);
-        if(ret >= 0) {
-            /* Cast is safe because of the above check */
-            len = (uint32_t)ret;
-        }
-#endif /* LV_USE_LZ4 */
-    }
-
-    if(len != compressed->decompressed_size) {
-        LV_LOG_WARN("Decompress failed: %" LV_PRIu32 ", got: %" LV_PRIu32, out_len, len);
-        lv_draw_buf_destroy(decompressed);
-        return LV_RESULT_INVALID;
-    }
-
-    decoder_data->decompressed = decompressed; /*Free on decoder close*/
-    return LV_RESULT_OK;
-#else
-    LV_UNUSED(dsc);
-    LV_UNUSED(compressed);
-    LV_LOG_WARN("At least one compression method must be enabled");
-    return LV_RESULT_INVALID;
-#endif /* (LV_USE_LZ4 || LV_USE_RLE) */
 }

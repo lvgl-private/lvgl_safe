@@ -16,14 +16,6 @@
 #include "../../core/lv_global.h"
 #include "../../misc/lv_area_private.h"
 
-#if LV_USE_VECTOR_GRAPHIC && LV_USE_THORVG
-    #if LV_USE_THORVG_EXTERNAL
-        #include <thorvg_capi.h>
-    #else
-        #include "../../libs/thorvg/thorvg_capi.h"
-    #endif
-#endif
-
 #if LV_USE_DRAW_SW_ASM == LV_DRAW_SW_ASM_HELIUM
     #include "arm2d/lv_draw_sw_helium.h"
 #elif LV_USE_DRAW_SW_ASM == LV_DRAW_SW_ASM_CUSTOM
@@ -100,24 +92,11 @@ void lv_draw_sw_init(void)
     }
 #endif
 
-#if LV_USE_VECTOR_GRAPHIC && LV_USE_THORVG
-    if(LV_DRAW_SW_DRAW_UNIT_CNT > 1) {
-        tvg_engine_init(TVG_ENGINE_SW, LV_DRAW_SW_DRAW_UNIT_CNT);
-    }
-    else {
-        tvg_engine_init(TVG_ENGINE_SW, 0);
-    }
-#endif
-
     lv_ll_init(&LV_GLOBAL_DEFAULT()->draw_sw_blend_handler_ll, sizeof(lv_draw_sw_custom_blend_handler_t));
 }
 
 void lv_draw_sw_deinit(void)
 {
-#if LV_USE_VECTOR_GRAPHIC && LV_USE_THORVG
-    tvg_engine_term(TVG_ENGINE_SW);
-#endif
-
 #if LV_DRAW_SW_COMPLEX == 1
     lv_draw_sw_mask_deinit();
 #endif
@@ -418,11 +397,6 @@ static void execute_drawing(lv_draw_task_t * t)
         case LV_DRAW_TASK_TYPE_MASK_RECTANGLE:
             lv_draw_sw_mask_rect(t, t->draw_dsc);
             break;
-#if LV_USE_VECTOR_GRAPHIC && LV_USE_THORVG
-        case LV_DRAW_TASK_TYPE_VECTOR:
-            lv_draw_sw_vector(t, t->draw_dsc);
-            break;
-#endif
         default:
             break;
     }
