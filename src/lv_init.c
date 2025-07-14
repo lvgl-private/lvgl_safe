@@ -19,13 +19,11 @@
 #include "core/lv_obj.h"
 #include "display/lv_display_private.h"
 #include "indev/lv_indev_private.h"
-#include "layouts/lv_layout_private.h"
 #include "libs/bin_decoder/lv_bin_decoder.h"
 #include "libs/fsdrv/lv_fsdrv.h"
 #include "draw/lv_draw.h"
 #include "misc/lv_async.h"
 #include "misc/lv_fs_private.h"
-#include "widgets/span/lv_span.h"
 #include "themes/simple/lv_theme_simple.h"
 #include "misc/lv_fs.h"
 #include "osal/lv_os_private.h"
@@ -127,7 +125,6 @@ static inline void lv_global_init(lv_global_t * global)
 
     global->memory_zero = ZERO_MEM_SENTINEL;
     global->style_refresh = true;
-    global->layout_count = LV_LAYOUT_LAST;
     global->style_last_custom_prop_id = (uint32_t)LV_STYLE_LAST_BUILT_IN_PROP;
     global->event_last_register_id = LV_EVENT_LAST;
     lv_rand_set_seed(0x1234ABCD);
@@ -186,10 +183,6 @@ void lv_init(void)
 
     lv_draw_buf_init_handlers();
 
-#if LV_USE_SPAN != 0
-    lv_span_stack_init();
-#endif
-
 #if LV_USE_PROFILER && LV_USE_PROFILER_BUILTIN
     lv_profiler_builtin_config_t profiler_config;
     lv_profiler_builtin_config_init(&profiler_config);
@@ -201,8 +194,6 @@ void lv_init(void)
     lv_timer_core_init();
 
     lv_fs_init();
-
-    lv_layout_init();
 
     lv_anim_core_init();
 
@@ -394,24 +385,12 @@ void lv_deinit(void)
     lv_evdev_deinit();
 #endif
 
-#if LV_USE_SPAN != 0
-    lv_span_stack_deinit();
-#endif
-
 #if LV_USE_FREETYPE
     lv_freetype_uninit();
 #endif
 
-#if LV_USE_THEME_DEFAULT
-    lv_theme_default_deinit();
-#endif
-
 #if LV_USE_THEME_SIMPLE
     lv_theme_simple_deinit();
-#endif
-
-#if LV_USE_THEME_MONO
-    lv_theme_mono_deinit();
 #endif
 
     lv_image_decoder_deinit();
@@ -459,8 +438,6 @@ void lv_deinit(void)
     lv_group_deinit();
 
     lv_anim_core_deinit();
-
-    lv_layout_deinit();
 
     lv_fs_deinit();
 

@@ -51,39 +51,16 @@ extern "C" {
 #include "src/font/lv_binfont_loader.h"
 #include "src/font/lv_font_fmt_txt.h"
 
-#include "src/widgets/animimage/lv_animimage.h"
-#include "src/widgets/arc/lv_arc.h"
-#include "src/widgets/arclabel/lv_arclabel.h"
 #include "src/widgets/bar/lv_bar.h"
 #include "src/widgets/button/lv_button.h"
-#include "src/widgets/buttonmatrix/lv_buttonmatrix.h"
-#include "src/widgets/calendar/lv_calendar.h"
 #include "src/widgets/canvas/lv_canvas.h"
-#include "src/widgets/chart/lv_chart.h"
 #include "src/widgets/checkbox/lv_checkbox.h"
-#include "src/widgets/dropdown/lv_dropdown.h"
 #include "src/widgets/image/lv_image.h"
 #include "src/widgets/imagebutton/lv_imagebutton.h"
-#include "src/widgets/keyboard/lv_keyboard.h"
 #include "src/widgets/label/lv_label.h"
 #include "src/widgets/led/lv_led.h"
-#include "src/widgets/line/lv_line.h"
-#include "src/widgets/list/lv_list.h"
-#include "src/widgets/menu/lv_menu.h"
-#include "src/widgets/msgbox/lv_msgbox.h"
-#include "src/widgets/roller/lv_roller.h"
-#include "src/widgets/scale/lv_scale.h"
 #include "src/widgets/slider/lv_slider.h"
-#include "src/widgets/span/lv_span.h"
-#include "src/widgets/spinbox/lv_spinbox.h"
-#include "src/widgets/spinner/lv_spinner.h"
 #include "src/widgets/switch/lv_switch.h"
-#include "src/widgets/table/lv_table.h"
-#include "src/widgets/tabview/lv_tabview.h"
-#include "src/widgets/textarea/lv_textarea.h"
-#include "src/widgets/tileview/lv_tileview.h"
-#include "src/widgets/win/lv_win.h"
-#include "src/widgets/3dtexture/lv_3dtexture.h"
 
 #include "src/others/snapshot/lv_snapshot.h"
 #include "src/others/sysmon/lv_sysmon.h"
@@ -102,8 +79,6 @@ extern "C" {
 #include "src/libs/bin_decoder/lv_bin_decoder.h"
 #include "src/libs/fsdrv/lv_fsdrv.h"
 
-#include "src/layouts/lv_layout.h"
-
 #include "src/draw/lv_draw_buf.h"
 #include "src/draw/lv_draw_vector.h"
 
@@ -111,10 +86,6 @@ extern "C" {
 
 #include "src/drivers/lv_drivers.h"
 
-#include "src/lv_api_map_v8.h"
-#include "src/lv_api_map_v9_0.h"
-#include "src/lv_api_map_v9_1.h"
-#include "src/lv_api_map_v9_2.h"
 
 #if LV_USE_PRIVATE_API
 #include "src/lvgl_private.h"

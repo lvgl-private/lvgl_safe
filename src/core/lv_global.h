@@ -40,7 +40,6 @@ extern "C" {
 #endif
 
 #include "../tick/lv_tick.h"
-#include "../layouts/lv_layout.h"
 
 #include "../misc/lv_types.h"
 
@@ -54,7 +53,6 @@ extern "C" {
 #include "../stdlib/builtin/lv_tlsf_private.h"
 #include "../others/sysmon/lv_sysmon_private.h"
 #include "../others/test/lv_test_private.h"
-#include "../layouts/lv_layout_private.h"
 
 /*********************
  *      DEFINES
@@ -103,7 +101,6 @@ typedef struct _lv_global_t {
     lv_obj_t * indev_obj_active;
 
     uint32_t layout_count;
-    lv_layout_dsc_t * layout_list;
     bool layout_update_mutex;
 
     uint32_t memory_zero;

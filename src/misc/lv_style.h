@@ -22,7 +22,6 @@ extern "C" {
 #include "lv_assert.h"
 #include "lv_bidi.h"
 #include "lv_grad.h"
-#include "../layouts/lv_layout.h"
 
 /*********************
  *      DEFINES

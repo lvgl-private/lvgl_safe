@@ -7,7 +7,6 @@
  *      INCLUDES
  *********************/
 #include "../misc/lv_area_private.h"
-#include "../layouts/lv_layout_private.h"
 #include "lv_obj_event_private.h"
 #include "lv_obj_draw_private.h"
 #include "lv_obj_style_private.h"
@@ -1235,9 +1234,6 @@ static void layout_update_core(lv_obj_t * obj)
         lv_obj_refr_size(obj);
         lv_obj_refr_pos(obj);
 
-        if(child_cnt > 0) {
-            lv_layout_apply(obj);
-        }
     }
 
     if(obj->readjust_scroll_after_layout) {

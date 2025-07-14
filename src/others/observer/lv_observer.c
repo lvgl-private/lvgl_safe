@@ -92,24 +92,9 @@ static void lv_subject_notify_if_changed(lv_subject_t * subject);
     static void label_text_observer_cb(lv_observer_t * observer, lv_subject_t * subject);
 #endif
 
-#if LV_USE_ARC
-    static void arc_value_changed_event_cb(lv_event_t * e);
-    static void arc_value_observer_cb(lv_observer_t * observer, lv_subject_t * subject);
-#endif
-
 #if LV_USE_SLIDER
     static void slider_value_changed_event_cb(lv_event_t * e);
     static void slider_value_observer_cb(lv_observer_t * observer, lv_subject_t * subject);
-#endif
-
-#if LV_USE_ROLLER
-    static void roller_value_changed_event_cb(lv_event_t * e);
-    static void roller_value_observer_cb(lv_observer_t * observer, lv_subject_t * subject);
-#endif
-
-#if LV_USE_DROPDOWN
-    static void dropdown_value_changed_event_cb(lv_event_t * e);
-    static void dropdown_value_observer_cb(lv_observer_t * observer, lv_subject_t * subject);
 #endif
 
 static void free_user_data_event_cb(lv_event_t * e);
