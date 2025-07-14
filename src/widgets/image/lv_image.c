@@ -109,8 +109,8 @@ const lv_obj_class_t lv_image_class = {
     .constructor_cb = lv_image_constructor,
     .destructor_cb = lv_image_destructor,
     .event_cb = lv_image_event,
-    .width_def = LV_SIZE_CONTENT,
-    .height_def = LV_SIZE_CONTENT,
+    .width_def = 100,
+    .height_def = 100,
     .instance_size = sizeof(lv_image_t),
     .base_class = &lv_obj_class,
     .name = "lv_image",
@@ -247,8 +247,6 @@ void lv_image_set_src(lv_obj_t * obj, const void * src)
     img->h        = header.h;
     img->cf       = header.cf;
 
-    lv_obj_refresh_self_size(obj);
-
     update_align(obj);
 
     /*Provide enough room for the rotated corners*/
@@ -294,7 +292,6 @@ void lv_image_set_rotation(lv_obj_t * obj, int32_t angle)
 
     if((uint32_t)angle == img->rotation) return;
 
-    lv_obj_update_layout(obj);  /*Be sure the object's size is calculated*/
     int32_t w = lv_obj_get_width(obj);
     int32_t h = lv_obj_get_height(obj);
     lv_area_t a;
@@ -336,7 +333,6 @@ void lv_image_set_pivot(lv_obj_t * obj, int32_t x, int32_t y)
 
     if(img->pivot.x == x && img->pivot.y == y) return;
 
-    lv_obj_update_layout(obj);  /*Be sure the object's size is calculated*/
     int32_t w = lv_obj_get_width(obj);
     int32_t h = lv_obj_get_height(obj);
     lv_area_t a;
@@ -529,8 +525,8 @@ void lv_image_get_pivot(lv_obj_t * obj, lv_point_t * pivot)
 
     lv_image_t * img = (lv_image_t *)obj;
 
-    pivot->x = lv_pct_to_px(img->pivot.x, img->w);
-    pivot->y = lv_pct_to_px(img->pivot.y, img->h);
+    pivot->x = img->pivot.x;
+    pivot->y = img->pivot.y;
 }
 
 int32_t lv_image_get_scale(lv_obj_t * obj)
@@ -669,7 +665,7 @@ static void lv_image_constructor(const lv_obj_class_t * class_p, lv_obj_t * obj)
     img->scale_y      = LV_SCALE_NONE;
     img->antialias = LV_COLOR_DEPTH > 8 ? 1 : 0;
     lv_point_set(&img->offset, 0, 0);
-    lv_point_set(&img->pivot, LV_PCT(50), LV_PCT(50)); /*Default pivot to image center*/
+    lv_point_set(&img->pivot, 0, 0); /*Default pivot to image center*/
     img->align     = LV_IMAGE_ALIGN_CENTER;
 
     lv_obj_remove_flag(obj, LV_OBJ_FLAG_CLICKABLE);
@@ -764,11 +760,6 @@ static void lv_image_event(const lv_obj_class_t * class_p, lv_event_t * e)
             lv_obj_get_click_area(obj, &a);
             info->res = lv_area_is_point_on(&a, info->point, 0);
         }
-    }
-    else if(code == LV_EVENT_GET_SELF_SIZE) {
-        lv_point_t * p = lv_event_get_param(e);
-        p->x = img->w;
-        p->y = img->h;
     }
     else if(code == LV_EVENT_DRAW_MAIN || code == LV_EVENT_DRAW_POST || code == LV_EVENT_COVER_CHECK) {
         draw_image(e);
@@ -937,7 +928,6 @@ static void scale_update(lv_obj_t * obj, int32_t scale_x, int32_t scale_y)
 {
     lv_image_t * img = (lv_image_t *)obj;
 
-    lv_obj_update_layout(obj);  /*Be sure the object's size is calculated*/
     int32_t w = lv_obj_get_width(obj);
     int32_t h = lv_obj_get_height(obj);
     lv_area_t a;
@@ -970,44 +960,6 @@ static void scale_update(lv_obj_t * obj, int32_t scale_x, int32_t scale_y)
 
 static void update_align(lv_obj_t * obj)
 {
-    lv_image_t * img = (lv_image_t *)obj;
-    if(img->align == LV_IMAGE_ALIGN_STRETCH) {
-        lv_image_set_rotation(obj, 0);
-        lv_image_set_pivot(obj, 0, 0);
-        if(img->w != 0 && img->h != 0) {
-            lv_obj_update_layout(obj);
-            int32_t scale_x = lv_obj_get_width(obj) * LV_SCALE_NONE / img->w;
-            int32_t scale_y = lv_obj_get_height(obj) * LV_SCALE_NONE / img->h;
-            scale_update(obj, scale_x, scale_y);
-        }
-    }
-    else if(img->align == LV_IMAGE_ALIGN_CONTAIN) {
-        lv_image_set_rotation(obj, 0);
-        lv_image_set_pivot(obj, 0, 0);
-        if(img->w != 0 && img->h != 0) {
-            lv_obj_update_layout(obj);
-            int32_t scale_x = lv_obj_get_width(obj) * LV_SCALE_NONE / img->w;
-            int32_t scale_y = lv_obj_get_height(obj) * LV_SCALE_NONE / img->h;
-            int32_t scale = LV_MIN(scale_x, scale_y);
-            scale_update(obj, scale, scale);
-        }
-    }
-    else if(img->align == LV_IMAGE_ALIGN_COVER) {
-        lv_image_set_rotation(obj, 0);
-        lv_image_set_pivot(obj, 0, 0);
-        if(img->w != 0 && img->h != 0) {
-            lv_obj_update_layout(obj);
-            int32_t scale_x = lv_obj_get_width(obj) * LV_SCALE_NONE / img->w;
-            int32_t scale_y = lv_obj_get_height(obj) * LV_SCALE_NONE / img->h;
-            int32_t scale = LV_MAX(scale_x, scale_y);
-            scale_update(obj, scale, scale);
-        }
-    }
-    else if(img->align == LV_IMAGE_ALIGN_TILE) {
-        lv_image_set_rotation(obj, 0);
-        lv_image_set_pivot(obj, 0, 0);
-        scale_update(obj, LV_SCALE_NONE, LV_SCALE_NONE);
-    }
 }
 
 #if LV_USE_OBJ_PROPERTY

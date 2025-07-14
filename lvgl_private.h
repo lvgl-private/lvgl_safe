@@ -65,7 +65,6 @@ extern "C" {
 #include "src/misc/lv_anim_private.h"
 #include "src/widgets/slider/lv_slider_private.h"
 #include "src/widgets/switch/lv_switch_private.h"
-#include "src/widgets/imagebutton/lv_imagebutton_private.h"
 #include "src/widgets/bar/lv_bar_private.h"
 #include "src/widgets/image/lv_image_private.h"
 #include "src/widgets/checkbox/lv_checkbox_private.h"

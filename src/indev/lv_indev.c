@@ -452,7 +452,6 @@ void lv_indev_set_cursor(lv_indev_t * indev, lv_obj_t * cur_obj)
     if(indev->type != LV_INDEV_TYPE_POINTER) return;
 
     indev->cursor = cur_obj;
-    lv_obj_set_parent(indev->cursor, lv_display_get_layer_sys(indev->disp));
     lv_obj_set_pos(indev->cursor, indev->pointer.act_point.x, indev->pointer.act_point.y);
     lv_obj_remove_flag(indev->cursor, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_add_flag(indev->cursor, LV_OBJ_FLAG_IGNORE_LAYOUT | LV_OBJ_FLAG_FLOATING);
@@ -594,8 +593,6 @@ lv_obj_t * lv_indev_search_obj(lv_obj_t * obj, lv_point_t * point)
     if(lv_obj_has_flag(obj, LV_OBJ_FLAG_HIDDEN)) return NULL;
 
     lv_point_t p_trans = *point;
-    lv_obj_transform_point(obj, &p_trans, LV_OBJ_POINT_TRANSFORM_FLAG_INVERSE);
-
     bool hit_test_ok = lv_obj_hit_test(obj, &p_trans);
 
     /*If the point is on this object check its children too*/
@@ -1494,38 +1491,6 @@ static void indev_proc_release(lv_indev_t * indev)
         indev->pr_timestamp          = 0;
         indev->longpr_rep_timestamp  = 0;
 
-        /*Get the transformed vector with this object*/
-        if(scroll_obj) {
-            int16_t angle = 0;
-            int16_t scale_x = 256;
-            int16_t scale_y = 256;
-            lv_point_t pivot = { 0, 0 };
-            lv_obj_t * parent = scroll_obj;
-            while(parent) {
-                angle += lv_obj_get_style_transform_rotation(parent, 0);
-                int32_t zoom_act_x = lv_obj_get_style_transform_scale_x_safe(parent, 0);
-                int32_t zoom_act_y = lv_obj_get_style_transform_scale_y_safe(parent, 0);
-                scale_x = (scale_x * zoom_act_x) >> 8;
-                scale_y = (scale_x * zoom_act_y) >> 8;
-                parent = lv_obj_get_parent(parent);
-            }
-
-            if(scale_x == 0) {
-                scale_x = 1;
-            }
-
-            if(scale_y == 0) {
-                scale_y = 1;
-            }
-
-            if(angle != 0 || scale_y != LV_SCALE_NONE || scale_x != LV_SCALE_NONE) {
-                angle = -angle;
-                scale_x = (256 * 256) / scale_x;
-                scale_y = (256 * 256) / scale_y;
-                lv_point_transform(&indev->pointer.scroll_throw_vect, angle, scale_x, scale_y, &pivot, false);
-                lv_point_transform(&indev->pointer.scroll_throw_vect_ori, angle, scale_x, scale_y, &pivot, false);
-            }
-        }
     }
 
     if(scroll_obj) {

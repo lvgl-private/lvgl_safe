@@ -180,9 +180,7 @@ static void draw_main(lv_event_t * e)
     lv_layer_t * layer = lv_event_get_layer(e);
 
     /*Draw the indicator*/
-    lv_area_t indic_area;
-    /*Exclude background's padding*/
-    lv_obj_get_content_coords(obj, &indic_area);
+    lv_area_t indic_area = obj->coords;
 
     lv_draw_rect_dsc_t draw_indic_dsc;
     lv_draw_rect_dsc_init(&draw_indic_dsc);

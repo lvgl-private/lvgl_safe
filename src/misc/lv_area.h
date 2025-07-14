@@ -203,49 +203,9 @@ void lv_point_precise_swap(lv_point_precise_t * p1, lv_point_precise_t * p2);
  *      MACROS
  **********************/
 
-#define LV_COORD_TYPE_SHIFT    (29U)
-
-#define LV_COORD_TYPE_MASK     (3 << LV_COORD_TYPE_SHIFT)
-#define LV_COORD_TYPE(x)       ((x) & LV_COORD_TYPE_MASK)  /*Extract type specifiers*/
-#define LV_COORD_PLAIN(x)      ((x) & ~LV_COORD_TYPE_MASK) /*Remove type specifiers*/
-
-#define LV_COORD_TYPE_PX       (0 << LV_COORD_TYPE_SHIFT)
-#define LV_COORD_TYPE_SPEC     (1 << LV_COORD_TYPE_SHIFT)
-#define LV_COORD_TYPE_PX_NEG   (3 << LV_COORD_TYPE_SHIFT)
-
-#define LV_COORD_IS_PX(x)       (LV_COORD_TYPE(x) == LV_COORD_TYPE_PX || LV_COORD_TYPE(x) == LV_COORD_TYPE_PX_NEG)
-#define LV_COORD_IS_SPEC(x)     (LV_COORD_TYPE(x) == LV_COORD_TYPE_SPEC)
-
-#define LV_COORD_SET_SPEC(x)    ((x) | LV_COORD_TYPE_SPEC)
-
 /** Max coordinate value */
-#define LV_COORD_MAX            ((1 << LV_COORD_TYPE_SHIFT) - 1)
-#define LV_COORD_MIN            (-LV_COORD_MAX)
-
-/*Special coordinates*/
-#define LV_SIZE_CONTENT         LV_COORD_SET_SPEC(LV_COORD_MAX)
-#define LV_PCT_STORED_MAX       (LV_COORD_MAX - 1)
-#if LV_PCT_STORED_MAX % 2 != 0
-#error LV_PCT_STORED_MAX should be an even number
-#endif
-#define LV_PCT_POS_MAX          (LV_PCT_STORED_MAX / 2)
-#define LV_PCT(x)               (LV_COORD_SET_SPEC(((x) < 0 ? (LV_PCT_POS_MAX - LV_MAX((x), -LV_PCT_POS_MAX)) : LV_MIN((x), LV_PCT_POS_MAX))))
-#define LV_COORD_IS_PCT(x)      ((LV_COORD_IS_SPEC(x) && LV_COORD_PLAIN(x) <= LV_PCT_STORED_MAX))
-#define LV_COORD_GET_PCT(x)     (LV_COORD_PLAIN(x) > LV_PCT_POS_MAX ? LV_PCT_POS_MAX - LV_COORD_PLAIN(x) : LV_COORD_PLAIN(x))
-
-LV_EXPORT_CONST_INT(LV_COORD_MAX);
-LV_EXPORT_CONST_INT(LV_COORD_MIN);
-LV_EXPORT_CONST_INT(LV_SIZE_CONTENT);
-
-/**
- * Convert a percentage value to `int32_t`.
- * Percentage values are stored in special range
- * @param x the percentage (0..1000)
- * @return a coordinate that stores the percentage
- */
-int32_t lv_pct(int32_t x);
-
-int32_t lv_pct_to_px(int32_t v, int32_t base);
+#define LV_COORD_MAX            (2048)
+#define LV_COORD_MIN            (-2048)
 
 #ifdef __cplusplus
 } /*extern "C"*/

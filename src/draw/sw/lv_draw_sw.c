@@ -358,9 +358,6 @@ static void execute_drawing(lv_draw_task_t * t)
         case LV_DRAW_TASK_TYPE_LINE:
             lv_draw_sw_line(t, t->draw_dsc);
             break;
-        case LV_DRAW_TASK_TYPE_TRIANGLE:
-            lv_draw_sw_triangle(t, t->draw_dsc);
-            break;
         case LV_DRAW_TASK_TYPE_MASK_RECTANGLE:
             lv_draw_sw_mask_rect(t, t->draw_dsc);
             break;

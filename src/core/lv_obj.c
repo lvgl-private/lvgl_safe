@@ -250,7 +250,6 @@ void lv_obj_add_flag(lv_obj_t * obj, lv_obj_flag_t f)
     if(lv_obj_has_flag(obj, f)) /*Check if all flags are set*/
         return;
 
-    bool was_on_layout = lv_obj_is_layout_positioned(obj);
 
     /* We must invalidate the area occupied by the object before we hide it as calls to invalidate hidden objects are ignored */
     if(f & LV_OBJ_FLAG_HIDDEN) lv_obj_invalidate(obj);
@@ -269,18 +268,6 @@ void lv_obj_add_flag(lv_obj_t * obj, lv_obj_flag_t f)
             }
         }
     }
-
-    if((was_on_layout != lv_obj_is_layout_positioned(obj)) || (f & (LV_OBJ_FLAG_LAYOUT_1 |  LV_OBJ_FLAG_LAYOUT_2))) {
-        lv_obj_mark_layout_as_dirty(lv_obj_get_parent(obj));
-        lv_obj_mark_layout_as_dirty(obj);
-    }
-
-    if(f & LV_OBJ_FLAG_SCROLLABLE) {
-        lv_area_t hor_area, ver_area;
-        lv_obj_get_scrollbar_area(obj, &hor_area, &ver_area);
-        lv_obj_invalidate_area(obj, &hor_area);
-        lv_obj_invalidate_area(obj, &ver_area);
-    }
 }
 
 void lv_obj_remove_flag(lv_obj_t * obj, lv_obj_flag_t f)
@@ -289,7 +276,6 @@ void lv_obj_remove_flag(lv_obj_t * obj, lv_obj_flag_t f)
     if(!lv_obj_has_flag_any(obj, f))
         return;
 
-    bool was_on_layout = lv_obj_is_layout_positioned(obj);
     if(f & LV_OBJ_FLAG_SCROLLABLE) {
         lv_area_t hor_area, ver_area;
         lv_obj_get_scrollbar_area(obj, &hor_area, &ver_area);
@@ -301,13 +287,8 @@ void lv_obj_remove_flag(lv_obj_t * obj, lv_obj_flag_t f)
 
     if(f & LV_OBJ_FLAG_HIDDEN) {
         lv_obj_invalidate(obj);
-        lv_obj_mark_layout_as_dirty(lv_obj_get_parent(obj));
-        lv_obj_mark_layout_as_dirty(obj);
     }
 
-    if((was_on_layout != lv_obj_is_layout_positioned(obj)) || (f & (LV_OBJ_FLAG_LAYOUT_1 |  LV_OBJ_FLAG_LAYOUT_2))) {
-        lv_obj_mark_layout_as_dirty(lv_obj_get_parent(obj));
-    }
 
 }
 
@@ -816,13 +797,6 @@ static void lv_obj_event(const lv_obj_class_t * class_p, lv_event_t * e)
     else if(code == LV_EVENT_PRESS_LOST) {
         lv_obj_remove_state(obj, LV_STATE_PRESSED);
     }
-    else if(code == LV_EVENT_STYLE_CHANGED) {
-        uint32_t child_cnt = lv_obj_get_child_count(obj);
-        for(uint32_t i = 0; i < child_cnt; i++) {
-            lv_obj_t * child = obj->spec_attr->children[i];
-            lv_obj_mark_layout_as_dirty(child);
-        }
-    }
     else if(code == LV_EVENT_KEY) {
         if(lv_obj_has_flag(obj, LV_OBJ_FLAG_CHECKABLE)) {
             uint32_t c = lv_event_get_key(e);
@@ -909,32 +883,8 @@ static void lv_obj_event(const lv_obj_class_t * class_p, lv_event_t * e)
     else if(code == LV_EVENT_DEFOCUSED) {
         lv_obj_remove_state(obj, LV_STATE_FOCUSED | LV_STATE_EDITED | LV_STATE_FOCUS_KEY);
     }
-    else if(code == LV_EVENT_SIZE_CHANGED) {
-        int32_t align = lv_obj_get_style_align(obj, LV_PART_MAIN);
-        uint16_t layout = lv_obj_get_style_layout(obj, LV_PART_MAIN);
-        if(layout || align) {
-            lv_obj_mark_layout_as_dirty(obj);
-        }
-
-        uint32_t i;
-        uint32_t child_cnt = lv_obj_get_child_count(obj);
-        for(i = 0; i < child_cnt; i++) {
-            lv_obj_t * child = obj->spec_attr->children[i];
-            lv_obj_mark_layout_as_dirty(child);
-        }
-    }
-    else if(code == LV_EVENT_CHILD_CHANGED) {
-        int32_t w = lv_obj_get_style_width(obj, LV_PART_MAIN);
-        int32_t h = lv_obj_get_style_height(obj, LV_PART_MAIN);
-        int32_t align = lv_obj_get_style_align(obj, LV_PART_MAIN);
-        uint16_t layout = lv_obj_get_style_layout(obj, LV_PART_MAIN);
-        if(layout || align || w == LV_SIZE_CONTENT || h == LV_SIZE_CONTENT) {
-            lv_obj_mark_layout_as_dirty(obj);
-        }
-    }
     else if(code == LV_EVENT_CHILD_DELETED) {
         obj->readjust_scroll_after_layout = 1;
-        lv_obj_mark_layout_as_dirty(obj);
     }
     else if(code == LV_EVENT_REFR_EXT_DRAW_SIZE) {
         int32_t d = lv_obj_calculate_ext_draw_size(obj, LV_PART_MAIN);

@@ -30,8 +30,8 @@ static void lv_button_constructor(const lv_obj_class_t * class_p, lv_obj_t * obj
  **********************/
 const lv_obj_class_t lv_button_class  = {
     .constructor_cb = lv_button_constructor,
-    .width_def = LV_SIZE_CONTENT,
-    .height_def = LV_SIZE_CONTENT,
+    .width_def = 200,
+    .height_def = 100,
     .group_def = LV_OBJ_CLASS_GROUP_DEF_TRUE,
     .instance_size = sizeof(lv_button_t),
     .base_class = &lv_obj_class,

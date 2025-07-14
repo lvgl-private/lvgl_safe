@@ -1262,17 +1262,9 @@ static void update_resolution(lv_display_t * disp)
     disp->inv_p = 0;
     lv_obj_invalidate(disp->sys_layer);
 
-    lv_obj_tree_walk(NULL, invalidate_layout_cb, NULL);
-
     lv_display_send_event(disp, LV_EVENT_RESOLUTION_CHANGED, NULL);
 }
 
-static lv_obj_tree_walk_res_t invalidate_layout_cb(lv_obj_t * obj, void * user_data)
-{
-    LV_UNUSED(user_data);
-    lv_obj_mark_layout_as_dirty(obj);
-    return LV_OBJ_TREE_WALK_NEXT;
-}
 
 static void scr_load_internal(lv_obj_t * scr)
 {

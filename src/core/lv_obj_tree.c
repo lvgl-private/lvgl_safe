@@ -144,67 +144,6 @@ void lv_obj_delete_async(lv_obj_t * obj)
     lv_async_call(lv_obj_delete_async_cb, obj);
 }
 
-void lv_obj_set_parent(lv_obj_t * obj, lv_obj_t * parent)
-{
-    LV_ASSERT_OBJ(obj, MY_CLASS);
-    LV_ASSERT_OBJ(parent, MY_CLASS);
-
-    if(obj->parent == NULL) {
-        LV_LOG_WARN("Can't set the parent of a screen");
-        return;
-    }
-
-    if(parent == NULL) {
-        LV_LOG_WARN("Can't set parent == NULL to an object");
-        return;
-    }
-
-    if(parent == obj->parent) {
-        return;
-    }
-
-    lv_obj_invalidate(obj);
-
-    lv_obj_allocate_spec_attr(parent);
-
-    lv_obj_t * old_parent = obj->parent;
-    /*Remove the object from the old parent's child list*/
-    int32_t i;
-    for(i = lv_obj_get_index(obj); i <= (int32_t)lv_obj_get_child_count(old_parent) - 2; i++) {
-        old_parent->spec_attr->children[i] = old_parent->spec_attr->children[i + 1];
-    }
-    old_parent->spec_attr->child_cnt--;
-    if(old_parent->spec_attr->child_cnt) {
-        old_parent->spec_attr->children = lv_realloc(old_parent->spec_attr->children,
-                                                     old_parent->spec_attr->child_cnt * (sizeof(lv_obj_t *)));
-    }
-    else {
-        lv_free(old_parent->spec_attr->children);
-        old_parent->spec_attr->children = NULL;
-    }
-
-    /*Add the child to the new parent as the last (newest child)*/
-    parent->spec_attr->child_cnt++;
-    parent->spec_attr->children = lv_realloc(parent->spec_attr->children,
-                                             parent->spec_attr->child_cnt * (sizeof(lv_obj_t *)));
-    parent->spec_attr->children[lv_obj_get_child_count(parent) - 1] = obj;
-
-    obj->parent = parent;
-
-    /*Notify the original parent because one of its children is lost*/
-    lv_obj_scrollbar_invalidate(old_parent);
-    lv_obj_send_event(old_parent, LV_EVENT_CHILD_CHANGED, obj);
-    lv_obj_send_event(old_parent, LV_EVENT_CHILD_DELETED, NULL);
-
-    /*Notify the new parent about the child*/
-    lv_obj_send_event(parent, LV_EVENT_CHILD_CHANGED, obj);
-    lv_obj_send_event(parent, LV_EVENT_CHILD_CREATED, NULL);
-
-    lv_obj_mark_layout_as_dirty(obj);
-
-    lv_obj_invalidate(obj);
-}
-
 void lv_obj_move_to_index(lv_obj_t * obj, int32_t index)
 {
     LV_ASSERT_OBJ(obj, MY_CLASS);

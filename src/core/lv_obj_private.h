@@ -55,6 +55,7 @@ struct _lv_obj_spec_attr_t {
 struct _lv_obj_t {
     const lv_obj_class_t * class_p;
     lv_obj_t * parent;
+
     lv_obj_spec_attr_t * spec_attr;
     lv_obj_style_t * styles;
 #if LV_OBJ_STYLE_CACHE
@@ -65,7 +66,13 @@ struct _lv_obj_t {
 #if LV_USE_OBJ_ID
     void * id;
 #endif
-    lv_area_t coords;
+    int32_t x;
+    int32_t y;
+    int32_t w;
+    int32_t h;
+    lv_align_t align;
+    lv_area_t coords; /*Abolsute coordinates*/
+
     lv_obj_flag_t flags;
     lv_state_t state;
     uint16_t layout_inv : 1;

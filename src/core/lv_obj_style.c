@@ -289,25 +289,6 @@ void lv_obj_refresh_style(lv_obj_t * obj, lv_style_selector_t selector, lv_style
     bool is_inheritable = lv_style_prop_has_flag(prop, LV_STYLE_PROP_FLAG_INHERITABLE);
     bool is_layer_refr = lv_style_prop_has_flag(prop, LV_STYLE_PROP_FLAG_LAYER_UPDATE);
 
-    if(is_layout_refr) {
-        if(part == LV_PART_ANY ||
-           part == LV_PART_MAIN ||
-           lv_obj_get_style_height(obj, 0) == LV_SIZE_CONTENT ||
-           lv_obj_get_style_width(obj, 0) == LV_SIZE_CONTENT) {
-            lv_obj_send_event(obj, LV_EVENT_STYLE_CHANGED, NULL);
-            lv_obj_mark_layout_as_dirty(obj);
-        }
-    }
-    if((part == LV_PART_ANY || part == LV_PART_MAIN) && (prop == LV_STYLE_PROP_ANY || is_layout_refr)) {
-        lv_obj_t * parent = lv_obj_get_parent(obj);
-        if(parent) lv_obj_mark_layout_as_dirty(parent);
-    }
-
-    /*Cache the layer type*/
-    if((part == LV_PART_ANY || part == LV_PART_MAIN) && is_layer_refr) {
-        lv_obj_update_layer_type(obj);
-    }
-
     if(prop == LV_STYLE_PROP_ANY || is_ext_draw) {
         lv_obj_refresh_ext_draw_size(obj);
     }

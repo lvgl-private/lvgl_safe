@@ -120,46 +120,6 @@ void lv_obj_set_width(lv_obj_t * obj, int32_t w);
 void lv_obj_set_height(lv_obj_t * obj, int32_t h);
 
 /**
- * Set the width reduced by the left and right padding and the border width.
- * @param obj       pointer to an object
- * @param w         the width without paddings in pixels
- */
-void lv_obj_set_content_width(lv_obj_t * obj, int32_t w);
-
-/**
- * Set the height reduced by the top and bottom padding and the border width.
- * @param obj       pointer to an object
- * @param h         the height without paddings in pixels
- */
-void lv_obj_set_content_height(lv_obj_t * obj, int32_t h);
-
-/**
- * Set a layout for an object
- * @param obj       pointer to an object
- * @param layout    pointer to a layout descriptor to set
- */
-void lv_obj_set_layout(lv_obj_t * obj, uint32_t layout);
-
-/**
- * Test whether the and object is positioned by a layout or not
- * @param obj       pointer to an object to test
- * @return true:    positioned by a layout; false: not positioned by a layout
- */
-bool lv_obj_is_layout_positioned(const lv_obj_t * obj);
-
-/**
- * Mark the object for layout update.
- * @param obj      pointer to an object whose children need to be updated
- */
-void lv_obj_mark_layout_as_dirty(lv_obj_t * obj);
-
-/**
- * Update the layout of an object.
- * @param obj      pointer to an object whose position and size needs to be updated
- */
-void lv_obj_update_layout(const lv_obj_t * obj);
-
-/**
  * Change the alignment of an object.
  * @param obj       pointer to an object to align
  * @param align     type of alignment (see 'lv_align_t' enum) `LV_ALIGN_OUT_...` can't be used.
